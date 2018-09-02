@@ -1,0 +1,13 @@
+{
+  "awsIotSqlVersion": "2016-03-23",
+  "sql": "SELECT batch, event, node, parse_time(\"yyyy-MM-dd'T'HH:mm:ss.SSSZ\", eventTimestamp) AS eventTime, CAST(temperature AS Decimal) AS temperature, infectedBy FROM 'weather-sensor-data/in'",
+  "ruleDisabled": false,
+  "actions": [
+    {
+      "kinesis": {
+        "roleArn": "arn:aws:iam::<aws-account-id>:role/iot-action-role",
+        "streamName": "<stream-name>"
+      }
+    }
+  ]
+}

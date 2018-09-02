@@ -1,0 +1,511 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: "AWS CloudFormaton template for the AWS blog on Real-time bushfire alerting with Complex Event Processing in Apache Flink on Amazon EMR and IoT sensor network."
+
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      -
+        Label:
+          default: 'Subscription to bushfire alert E-mail notifications'
+        Parameters:
+          - SNSEmail
+      -
+        Label:
+          default: 'Amazon EMR cluster details'
+        Parameters:
+          - EMRSubnet
+          - EMRLogBucket
+      -
+        Label:
+          default: 'IoT simulator details'
+        Parameters:
+          - EC2SubnetId
+          - EC2SecurityGroupId
+          - EC2KeyPair
+      -
+        Label:
+          default: 'Amazon Elasticsearch Service domain details'
+        Parameters:
+          - ESDomainName
+          - PublicIPToAccessKibana
+    ParameterLabels:
+      SNSEmail:
+        default: 'SNS subscription E-mail:'
+      EMRSubnet:
+        default: 'Public subnet id for EMR cluster'
+      EMRLogBucket:
+        default: 'S3 path location for EMR cluster logs'
+      EC2SubnetId:
+        default: 'Public subnet id for EC2 instance'
+      EC2SecurityGroupId:
+        default: 'Security group id for EC2 instance'
+      EC2KeyPair:
+        default: 'Key pair id for EC2 instance'
+      ESDomainName:
+        default: 'Domain name for Amazon Elasticsearch Service'
+      PublicIPToAccessKibana:
+        default: 'Public IP address to access Kibana from local machine'
+
+Parameters:
+  SNSEmail:
+    Description: 'Must be a valid E-mail address for SNS subscription'
+    Type: String
+  EMRSubnet:
+    Type: AWS::EC2::Subnet::Id
+  EMRLogBucket:
+    Type: String
+  EC2SubnetId:
+    Description: 'Public subnet id for the EC2 instance running the IoT simulator'
+    Type: 'AWS::EC2::Subnet::Id'
+  EC2SecurityGroupId:
+    Description: 'Security group for the corresponding public subnet specified above for the EC2 instance running the IoT simulator'
+    Type: 'AWS::EC2::SecurityGroup::Id'
+  EC2KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+  ESDomainName:
+    Type: String
+  PublicIPToAccessKibana:
+    Description: 'You can use http://checkip.amazonaws.com to check the public IP to specify here'
+    Type: String
+
+Mappings:
+  AWSRegionArch2AMI:
+    ap-south-1:
+     HVM64: ami-76d6f519
+    eu-west-1:
+     HVM64: ami-ca0135b3
+    eu-west-2:
+     HVM64: ami-a36f8dc4
+    eu-west-3:
+     HVM64: ami-969c2deb
+    ap-northeast-1:
+     HVM64: ami-92df37ed
+    ap-northeast-2:
+     HVM64: ami-c10fa6af
+    ap-northeast-3:
+     HVM64: ami-b4faf4c9
+    sa-east-1:
+     HVM64: ami-3885d854
+    ca-central-1:
+     HVM64: ami-338a0a57
+    ap-southeast-1:
+     HVM64: ami-de90a5a2
+    ap-southeast-2:
+     HVM64: ami-423bec20
+    eu-central-1:
+     HVM64: ami-9a91b371
+    us-east-1:
+     HVM64: ami-14c5486b
+    us-east-2:
+     HVM64: ami-922914f7
+    us-west-1:
+     HVM64: ami-25110f45
+    us-west-2:
+     HVM64: ami-e251209a
+
+Resources:
+  ESDomain:
+   Type: AWS::Elasticsearch::Domain
+   Properties:
+    DomainName: !Ref ESDomainName
+    AccessPolicies:
+      Version: 2012-10-17
+      Statement:
+         - Effect: Allow
+           Principal:
+            AWS:
+              - !Sub 'arn:aws:iam::${AWS::AccountId}:role/EMR_EC2_DefaultRole'
+              - !Sub 'arn:aws:iam::${AWS::AccountId}:role/${EC2Role}'
+           Action:
+              - "es:ESHttpPost"
+           Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ESDomainName}/*'
+         - Effect: Allow
+           Principal:
+            AWS:
+              - '*'
+           Action:
+              - "es:*"
+           Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ESDomainName}/*'
+           Condition:
+            IpAddress:
+              aws:SourceIp:
+              - !Sub '${PublicIPToAccessKibana}'
+    ElasticsearchClusterConfig:
+      DedicatedMasterEnabled: "false"
+      InstanceCount: "1"
+      ZoneAwarenessEnabled: "false"
+      InstanceType: "m3.medium.elasticsearch"
+    ElasticsearchVersion: "5.5"
+    #ElasticsearchVersion: "6.3"
+
+  KinesisStream:
+    Type: "AWS::Kinesis::Stream"
+    Properties:
+      ShardCount: 1
+
+  EMRCluster:
+    Type: AWS::EMR::Cluster
+    Properties:
+      Applications:
+        - Name: Hadoop
+        - Name: Flink
+      AutoScalingRole: "EMR_AutoScaling_DefaultRole"
+      EbsRootVolumeSize: 10
+      Instances:
+        MasterInstanceGroup:
+          InstanceCount: 1
+          InstanceType: "m4.large"
+          Market: ON_DEMAND
+          EbsConfiguration:
+            EbsBlockDeviceConfigs:
+              - VolumeSpecification:
+                  SizeInGB: 32
+                  VolumeType: gp2
+                VolumesPerInstance: 1
+          Name: Master instance group
+        CoreInstanceGroup:
+          InstanceCount: 1
+          InstanceType: "m4.large"
+          Market: ON_DEMAND
+          Name: Core instance group
+          EbsConfiguration:
+            EbsBlockDeviceConfigs:
+              - VolumeSpecification:
+                  SizeInGB: 32
+                  VolumeType: gp2
+                VolumesPerInstance: 1
+        TerminationProtected: "false"
+        Ec2SubnetId: !Ref EMRSubnet
+        Ec2KeyName: !Ref EC2KeyPair
+      JobFlowRole: "EMR_EC2_DefaultRole"
+      ServiceRole: "EMR_DefaultRole"
+      LogUri: !Ref EMRLogBucket
+      Name: "weather-sensor-flink-cep-emr-5160"
+      ReleaseLabel: "emr-5.16.0"
+      ScaleDownBehavior: "TERMINATE_AT_TASK_COMPLETION"
+      VisibleToAllUsers: 'true'
+
+  EMRCEPGetJar:
+    Type: AWS::EMR::Step
+    Properties:
+      ActionOnFailure: 'CONTINUE'
+      HadoopJarStep:
+        Args:
+         - "aws"
+         - "s3"
+         - "cp"
+         - "s3://realtime-bushfire-alert-with-apache-flink-cep/flink-cep-consumer/flink-cep-consumer-latest.jar"
+         - "/tmp/"
+        Jar: "command-runner.jar"
+      JobFlowId: !Ref EMRCluster
+      Name: 'Get-consumer-jar-step'
+
+  EMRFlinkSessionStep:
+    Type: AWS::EMR::Step
+    DependsOn: EMRCEPGetJar
+    Properties:
+      ActionOnFailure: 'CONTINUE'
+      HadoopJarStep:
+        Args:
+          - "flink-yarn-session"
+          - "-n"
+          - "1"
+          - "-s"
+          - "1"
+          - "-tm"
+          - "4096"
+          - "-d"
+        Jar: "command-runner.jar"
+      JobFlowId: !Ref EMRCluster
+      Name: 'Flink_session'
+
+  EMRCEPConsumerStep:
+    Type: AWS::EMR::Step
+    DependsOn: EMRFlinkSessionStep
+    Properties:
+      ActionOnFailure: 'CONTINUE'
+      HadoopJarStep:
+        Args:
+          - "flink"
+          - "run"
+          - "-p"
+          - "1"
+          - "/tmp/flink-cep-consumer-latest.jar"
+          - "--region"
+          - !Sub "${AWS::Region}"
+          - "--stream"
+          - !Sub "${KinesisStream}"
+          - "--es-endpoint"
+          - !Sub "https://${ESDomain.DomainEndpoint}"
+          - "--sns-topic-arn"
+          - !Sub "${IoTSNSTopic}"
+        Jar: "command-runner.jar"
+      JobFlowId: !Ref EMRCluster
+      Name: 'Run-flink-consumer-step'
+
+  IoTRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Service: "iot.amazonaws.com"
+              Action:
+                - "sts:AssumeRole"
+        Path: "/"
+        Policies:
+          -
+            PolicyName: "iot-action-role-policy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "kinesis:PutRecord"
+                    - "iot:Publish"
+                  Resource: "*"
+
+  IoTRule:
+     Type: "AWS::IoT::TopicRule"
+     Properties:
+       TopicRulePayload:
+         AwsIotSqlVersion: "2016-03-23"
+         RuleDisabled: "false"
+         Sql: >-
+           SELECT batch, event, node, parse_time("yyyy-MM-dd'T'HH:mm:ss.SSSZ", eventTimestamp) AS eventTime, CAST(temperature AS Decimal) AS temperature, infectedBy FROM 'weather-sensor-data/in'
+         Actions:
+           - Kinesis:
+                RoleArn: !GetAtt IoTRole.Arn
+                StreamName: !Ref KinesisStream
+
+  IoTPolicy:
+    Type: AWS::IoT::Policy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action:
+              - 'iot:Connect'
+            Resource:
+              - "*"
+          -
+            Effect: "Allow"
+            Action:
+              - 'iot:Publish'
+            Resource:
+              - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/*'
+
+  IoTSNSTopic:
+    Type: "AWS::SNS::Topic"
+
+  IoTSNSTopicSubscription:
+    Type: "AWS::SNS::Subscription"
+    Properties:
+      Endpoint: !Ref SNSEmail
+      Protocol: 'email'
+      TopicArn: !Ref IoTSNSTopic
+
+  EC2Role:
+      Type: 'AWS::IAM::Role'
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - 'ec2.amazonaws.com'
+            Action:
+            - 'sts:AssumeRole'
+        Path: '/'
+        Policies:
+        - PolicyName: IoTAccessRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - 'iot:CreateKeysAndCertificate'
+              - 'iot:DeleteCertificate'
+              - 'iot:UpdateCertificate'
+              - 'iot:DescribeEndpoint'
+              - 'iot:AttachPolicy'
+              - 'iot:DetachPolicy'
+              - 's3:*'
+              Resource:
+              - '*'
+
+  EC2InstanceProfile:
+      Type: 'AWS::IAM::InstanceProfile'
+      Properties:
+        Path: '/'
+        Roles:
+        - !Ref EC2Role
+
+  EC2Simulator:
+    Type: AWS::EC2::Instance
+    DependsOn: EMRCEPConsumerStep
+    Metadata:
+      'AWS::CloudFormation::Init':
+        config:
+          packages:
+            yum:
+              java-1.8.0-openjdk-devel.x86_64: []
+              jq: []
+          files:
+            '/etc/init.d/iot-simulator':
+              content: !Sub
+              - |
+                #!/bin/bash -e
+                # chkconfig: - 95 01
+                # description: start/stop iot-simulator
+                PROGDIR=/opt/iot-simulator
+                USER=ec2-user
+                JARNAME=iot-simulator-latest.jar
+                CERTIFICATE=$PROGDIR/iot-certificate/certificate.crt
+                PRIVATE_KEY=$PROGDIR/iot-certificate/private.key
+                CERTIDFILE=$PROGDIR/iot-certificate/iot-certificate-id
+                PROG_CMD="${CMD}"
+                if [ ! -d $PROGDIR ];then
+                   exit 1
+                fi
+                case $1 in
+                        "start" )
+                                echo "Starting IoT Simulator"
+                                if pgrep -f $JARNAME > /dev/null 2>&1; then
+                                        exit 1
+                                fi
+                                cd $PROGDIR
+                                endpoint=$(aws iot describe-endpoint --region ${AWS::Region} --query endpointAddress --output text)
+                                su $USER -c "nohup $PROG_CMD -endpoint $endpoint >> /opt/iot-simulator/iot-simulator.log 2>&1 &"
+                                sleep 2
+                                if [ ! -f /var/lock/subsys/iot-simulator ];then
+                                  touch /var/lock/subsys/iot-simulator
+                                fi
+                        ;;
+                        "stop" )
+                                echo "Deleting certificate ..."
+                                rm -f /var/lock/subsys/iot-simulator
+                                CERTID=$(cat $CERTIDFILE)
+                                aws iot update-certificate --certificate-id $CERTID --new-status INACTIVE --region ${AWS::Region}
+                                aws iot delete-certificate --certificate-id $CERTID --force-delete --region ${AWS::Region}
+                        ;;
+                esac
+                exit 0
+              - CMD: !Join
+                 - ' '
+                 - - 'java -jar $PROGDIR/$JARNAME'
+                   - '-topic weather-sensor-data/in'
+                   - '-cert $CERTIFICATE'
+                   - '-pk $PRIVATE_KEY -d'
+              mode: '000744'
+              owner: 'root'
+              group: 'root'
+          commands:
+            "00-enable-simulator-service":
+              command: 'chkconfig --add iot-simulator'
+            "01-remove-java-1.7":
+              command: 'yum remove -y java-1.7.0'
+            "02-create-dir":
+              command: 'mkdir -p /opt/iot-simulator/{elasticsearch,iot-certificate}'
+            "03-get-es-files":
+              command: 'aws s3 cp --recursive s3://realtime-bushfire-alert-with-apache-flink-cep/elasticsearch/ .'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "04-get-es-proxy":
+              command: 'wget https://github.com/abutaha/aws-es-proxy/releases/download/v0.8/aws-es-proxy-0.8-linux-amd64'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "05-get-iot-jar":
+              command: 'aws s3 cp s3://realtime-bushfire-alert-with-apache-flink-cep/iot-simulator/iot-simulator-latest.jar iot-simulator-latest.jar'
+              cwd: '/opt/iot-simulator'
+            "06-create-iot-certificate":
+              command: !Join
+                - ' '
+                - - 'aws iot create-keys-and-certificate --set-as-active'
+                  -  '--certificate-pem-outfile certificate.crt'
+                  -  '--public-key-outfile public.key'
+                  -  '--private-key-outfile private.key'
+                  -  !Sub '--region ${AWS::Region}'
+                  -  '--query certificateId'
+                  -  '--output text > iot-certificate-id'
+              cwd: '/opt/iot-simulator/iot-certificate'
+            "07-iot-certificate-attach-policy":
+              command: !Join
+                - ' '
+                - - 'aws iot attach-policy'
+                  - !Sub '--policy-name ${IoTPolicy}'
+                  - '--target'
+                  - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:cert/$(cat iot-certificate/iot-certificate-id)'
+                  - !Sub '--region ${AWS::Region}'
+              cwd: '/opt/iot-simulator'
+            "08-fix-permission":
+              command: "chown -R ec2-user /opt/iot-simulator && chmod -R go-rwx /opt/iot-simulator"
+            "09-run-es-proxy":
+              command: !Sub 'chmod +x ./aws-es-proxy-0.8-linux-amd64 ; su ec2-user -c "nohup ./aws-es-proxy-0.8-linux-amd64 -endpoint https://${ESDomain.DomainEndpoint} -log-to-file > /dev/null 2>&1 &"'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "10-create-es-mapping":
+              command: 'curl -XPUT http://localhost:9200/weather-sensor-data/ -H "Content-Type: application/json" -d @mapping.json'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            # Due to a breaking change in Elasticsearch v6.x you will not be able
+            # restore/import the dashboard and visualization objects in an automated way
+            # as shown in steps 11 and 12 below.
+            # See here: https://discuss.elastic.co/t/rejecting-mapping-update-to-kibana-as-the-final-mapping-would-have-more-than-1-type-visualization-doc-error/133557/8
+            # Rather, you need to import the files manually for now through the Kibana dashboard.
+            # Please refer to the blog article instructions to download the dashboard and
+            # visualization objects from the GitHub repository and and restore them properly.
+            "11-create-kibana-dashboard":
+              command: 'jq -rc ".[]._source" dashboard.json |curl -XPUT http://localhost:9200/.kibana/dashboard/851993d0-2101-11e8-84c9-cf2b2ab68f42 -H "Content-Type: application/json" -d @-'
+              #command: 'jq -rc ".[]._source" dashboard-v63.json |curl -XPUT http://localhost:9200/.kibana/dashboard/b42d49a0-a43c-11e8-9686-d7f99abf094e -H "Content-Type: application/json" -d @-'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "12-create-kibana-visualization":
+              command: 'jq -rc ".[]._source" visualization.json |curl -XPUT http://localhost:9200/.kibana/visualization/ff67a7e0-2100-11e8-84c9-cf2b2ab68f42 -H "Content-Type: application/json" -d @-'
+              #command: 'jq -rc ".[]._source" visualization-v63.json |curl -XPUT http://localhost:9200/.kibana/visualization/44cf00d0-a43c-11e8-9686-d7f99abf094e -H "Content-Type: application/json" -d @-'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "13-run-simulator":
+              command: "service iot-simulator start"
+            "14-signal-success":
+              command: !Sub '/opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2Simulator'
+              test: "pgrep -f iot-simulator-latest.jar"
+    Properties:
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      ImageId:
+        Fn::FindInMap:
+        - AWSRegionArch2AMI
+        - !Ref AWS::Region
+        - HVM64
+      InstanceType: "t2.small"
+      KeyName: !Ref EC2KeyPair
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          GroupSet:
+            - !Ref EC2SecurityGroupId
+          SubnetId: !Ref EC2SubnetId
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash -x
+          yum update -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2Simulator --region ${AWS::Region}
+          if [ ! $? -eq 0 ]; then
+            /opt/aws/bin/cfn-signal -e 1 --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2Simulator
+          fi
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT10M
+
+Outputs:
+  KibanaURL:
+    Description: Kibana Visualization URL
+    Value: !Sub 'https://${ESDomain.DomainEndpoint}/_plugin/kibana'
+  EMRWebUI:
+    Description: URL of the YARN ResourceManager on EMR
+    Value: !Sub 'https://${EMRCluster.MasterPublicDNS}:8088/'
+  EC2SimulatorIP:
+    Description: Public IP of EC2 instance running the Simulator
+    Value: !Sub '${EC2Simulator.PublicDnsName}'

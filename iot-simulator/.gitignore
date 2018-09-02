@@ -1,0 +1,41 @@
+# Compiled class file and folder
+*.class
+out/*
+target/*
+build/
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mac OSX
+.DS_Store
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+#*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+# IDEA 
+*.iml
+.idea/
+
+# Gradle
+gradle/
+gradle*
+.gradle/
+
+#
+.git/
+*.pem.*

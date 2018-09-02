@@ -1,0 +1,19 @@
+[
+  {
+    "_id": "851993d0-2101-11e8-84c9-cf2b2ab68f42",
+    "_type": "dashboard",
+    "_source": {
+      "title": "IoTHeatmapDashboard",
+      "hits": 0,
+      "description": "IoT heatmap dashboard",
+      "panelsJSON": "[{\"col\":1,\"id\":\"ff67a7e0-2100-11e8-84c9-cf2b2ab68f42\",\"panelIndex\":1,\"row\":1,\"size_x\":12,\"size_y\":5,\"type\":\"visualization\"}]",
+      "optionsJSON": "{\"darkTheme\":false}",
+      "uiStateJSON": "{\"P-1\":{\"vis\":{\"defaultColors\":{\"0 - 10\":\"rgb(0,104,55)\",\"10 - 20\":\"rgb(76,176,93)\",\"20 - 30\":\"rgb(183,224,117)\",\"30 - 40\":\"rgb(255,255,190)\",\"40 - 50\":\"rgb(253,191,111)\",\"50 - 60\":\"rgb(234,88,57)\"}}}}",
+      "version": 1,
+      "timeRestore": false,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[{\"query\":{\"match_all\":{}}}],\"highlightAll\":true,\"version\":true}"
+      }
+    }
+  }
+]

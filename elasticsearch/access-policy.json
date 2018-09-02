@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::${AWS::AccountId}:role/EMR_EC2_DefaultRole"
+      },
+      "Action": [
+        "es:ESHttpGet",
+        "es:ESHttpPut",
+        "es:ESHttpPost"
+      ],
+      "Resource": "arn:aws:es:us-east-1:${AWS::AccountId}:domain/weather-sensor-documents/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "es:*",
+      "Resource": "arn:aws:es:us-east-1:${AWS::AccountId}:domain/weather-sensors-es63/*",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": [
+            "<IP1>/32",
+            "<IP2>/32"
+          ]
+        }
+      }
+    }
+  ]
+}

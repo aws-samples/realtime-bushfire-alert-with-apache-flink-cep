@@ -1,0 +1,16 @@
+[
+  {
+    "_id": "44cf00d0-a43c-11e8-9686-d7f99abf094e",
+    "_type": "visualization",
+    "_source": {
+      "title": "IoTHeatmapVisualization",
+      "visState": "{\"title\":\"IoTHeatmapVisualization\",\"type\":\"heatmap\",\"params\":{\"addLegend\":true,\"addTooltip\":true,\"colorSchema\":\"Green to Red\",\"colorsNumber\":6,\"colorsRange\":[{\"from\":0,\"to\":10},{\"from\":10,\"to\":20},{\"from\":20,\"to\":30},{\"from\":30,\"to\":40},{\"from\":40,\"to\":50},{\"from\":50,\"to\":60}],\"enableHover\":false,\"invertColors\":false,\"legendPosition\":\"right\",\"percentageMode\":false,\"setColorRange\":false,\"times\":[],\"type\":\"heatmap\",\"valueAxes\":[{\"id\":\"ValueAxis-1\",\"labels\":{\"color\":\"#555\",\"overwriteColor\":false,\"rotate\":0,\"show\":false},\"scale\":{\"defaultYExtents\":false,\"type\":\"linear\"},\"show\":false,\"type\":\"value\"}]},\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"max\",\"schema\":\"metric\",\"params\":{\"field\":\"temperature\",\"customLabel\":\"Temperature\"}},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"schema\":\"segment\",\"params\":{\"field\":\"eventTime\",\"interval\":\"m\",\"customInterval\":\"2h\",\"min_doc_count\":1,\"extended_bounds\":{},\"customLabel\":\"Time\"}},{\"id\":\"3\",\"enabled\":true,\"type\":\"terms\",\"schema\":\"group\",\"params\":{\"field\":\"node\",\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\",\"size\":25,\"order\":\"desc\",\"orderBy\":\"_term\",\"customLabel\":\"Node\"}}]}",
+      "uiStateJSON": "{\"vis\":{\"defaultColors\":{\"0 - 10\":\"rgb(0,104,55)\",\"10 - 20\":\"rgb(76,176,93)\",\"20 - 30\":\"rgb(183,224,117)\",\"30 - 40\":\"rgb(255,255,190)\",\"40 - 50\":\"rgb(253,191,111)\",\"50 - 60\":\"rgb(234,88,57)\"}}}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"80319940-a43b-11e8-9686-d7f99abf094e\",\"filter\":[],\"query\":{\"language\":\"lucene\",\"query\":\"\"}}"
+      }
+    }
+  }
+]

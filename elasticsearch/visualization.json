@@ -1,0 +1,16 @@
+[
+  {
+    "_id": "ff67a7e0-2100-11e8-84c9-cf2b2ab68f42",
+    "_type": "visualization",
+    "_source": {
+      "title": "IoTHeatmapVisualization",
+      "visState": "{\"title\":\"IoTHeatmapVisualization\",\"type\":\"heatmap\",\"params\":{\"addTooltip\":true,\"addLegend\":true,\"enableHover\":false,\"legendPosition\":\"right\",\"times\":[],\"colorsNumber\":6,\"colorSchema\":\"Green to Red\",\"setColorRange\":true,\"colorsRange\":[{\"from\":0,\"to\":10},{\"from\":10,\"to\":20},{\"from\":20,\"to\":30},{\"from\":30,\"to\":40},{\"from\":40,\"to\":50},{\"from\":50,\"to\":60}],\"invertColors\":false,\"percentageMode\":false,\"valueAxes\":[{\"show\":false,\"id\":\"ValueAxis-1\",\"type\":\"value\",\"scale\":{\"type\":\"linear\",\"defaultYExtents\":false},\"labels\":{\"show\":false,\"rotate\":0,\"color\":\"#555\"}}]},\"aggs\":[{\"id\":\"1\",\"enabled\":true,\"type\":\"max\",\"schema\":\"metric\",\"params\":{\"field\":\"temperature\",\"customLabel\":\"Temperature\"}},{\"id\":\"2\",\"enabled\":true,\"type\":\"date_histogram\",\"schema\":\"segment\",\"params\":{\"field\":\"eventTime\",\"interval\":\"m\",\"customInterval\":\"2h\",\"min_doc_count\":1,\"extended_bounds\":{},\"customLabel\":\"Time\"}},{\"id\":\"3\",\"enabled\":true,\"type\":\"terms\",\"schema\":\"group\",\"params\":{\"field\":\"node\",\"size\":25,\"order\":\"desc\",\"orderBy\":\"_term\",\"customLabel\":\"Node\"}}],\"listeners\":{}}",
+      "uiStateJSON": "{\"vis\":{\"defaultColors\":{\"0 - 10\":\"rgb(0,104,55)\",\"10 - 20\":\"rgb(76,176,93)\",\"20 - 30\":\"rgb(183,224,117)\",\"30 - 40\":\"rgb(255,255,190)\",\"40 - 50\":\"rgb(253,191,111)\",\"50 - 60\":\"rgb(234,88,57)\"}}}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"index\":\"weather-sensor-data\",\"query\":{\"match_all\":{}},\"filter\":[]}"
+      }
+    }
+  }
+]
