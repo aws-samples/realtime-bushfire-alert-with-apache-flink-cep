@@ -1,10 +1,10 @@
 # Real-time bushfire alerting with Complex Event Processing (CEP) in Apache Flink on Amazon EMR and IoT sensor network
 
-This repository contains the code and documentations for the demonstration example of the real-time bushfire alerting with the Complex Event Processing (CEP) in Apache Flink on Amazon EMR and a simulated IoT sensor network as described on the [AWS Big Data Blog]().
+This repository contains the code and documentations for the demonstration example of the real-time bushfire alerting with the Complex Event Processing (CEP) in Apache Flink on Amazon EMR and a simulated IoT sensor network as described on the [AWS Big Data Blog](https://aws.amazon.com/blogs/big-data/real-time-bushfire-alerting-with-complex-event-processing-in-apache-flink-on-amazon-emr-and-iot-sensor-network/).
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. For launching this setup using an AWS CloudFormation template please use the [cfn-template.yml]() file located under the `cfn-template/` directory instead.
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. For launching this setup using an AWS CloudFormation template please use the [cfn-template.yml](https://github.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/blob/master/cfn-template/cfn-template.yml) file located under the `cfn-template/` directory instead.
 
 ### Prerequisites
 
@@ -18,7 +18,7 @@ For installation in other OS environment, please refer to the [installation note
 
 ### Installation and Usage
 
-Once you download the source files into your local machine, you need to build both the [iot-simulator]() and [flink-cep-consumer]() packages to get the producer and consumer applications, respectively. You can simply run the below command to compile and build the application JAR file upon navigating to the individual package directory.
+Once you download the source files into your local machine, you need to build both the [iot-simulator](https://github.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/tree/master/iot-simulator) and [flink-cep-consumer](https://github.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/tree/master/flink-cep-consumer) packages to get the producer and consumer applications, respectively. You can simply run the below command to compile and build the application JAR file upon navigating to the individual package directory.
 
 ```
 % gradle clean uber
@@ -58,9 +58,7 @@ Usage: <main class> [options]
       Default: 11
 ```
 
-The producer application can be run from your local machine or even from an Amazon EC2 instance providing that you supply all the required arguments like the AWS IoT endpoint, IoT topic name, and the certificate and primary key files.
-
-The consumer application ```flink-cep-consumer-latest.jar``` on the other hand needs to be used with the Apache Flink environment like the one comes with Amazon EMR cluster setup.
+The producer application can be run from your local machine or even from an Amazon EC2 instance providing that you supply all the required arguments like the AWS IoT endpoint, IoT topic name, and the certificate and primary key files. The consumer application ```flink-cep-consumer-latest.jar``` on the other hand needs to be used with the Apache Flink environment like the one comes with Amazon EMR cluster setup.
 
 In the next sections we discuss how to setup the individual components of this particular architecture if you are not using the provided AWS CloudFormation template. Note that, for explanation purpose we assume the default AWS region to be US East (N. Virginia) i.e., us-east-1 in the following sections. We also assume that all the files are located under the user's UNIX home directory `~`. Additionally, please pay special attention to replace all the placeholder texts within `<>` or `${}` with the appropriate ones according to your particular setup.
 
