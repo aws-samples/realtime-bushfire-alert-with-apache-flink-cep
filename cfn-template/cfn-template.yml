@@ -6,30 +6,30 @@ Description: "AWS CloudFormaton template for the AWS blog on Real-time bushfire 
 Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
-      -
-        Label:
-          default: 'Subscription to bushfire alert E-mail notifications'
-        Parameters:
-          - SNSEmail
-      -
-        Label:
-          default: 'Amazon EMR cluster details'
-        Parameters:
-          - EMRSubnet
-          - EMRLogBucket
-      -
-        Label:
-          default: 'IoT simulator details'
-        Parameters:
-          - EC2SubnetId
-          - EC2SecurityGroupId
-          - EC2KeyPair
-      -
-        Label:
-          default: 'Amazon Elasticsearch Service domain details'
-        Parameters:
-          - ESDomainName
-          - PublicIPToAccessKibana
+    -
+      Label:
+        default: 'Subscription to bushfire alert E-mail notifications'
+      Parameters:
+      - SNSEmail
+    -
+      Label:
+        default: 'Amazon EMR cluster details'
+      Parameters:
+      - EMRSubnet
+      - EMRLogBucket
+    -
+      Label:
+        default: 'IoT simulator details'
+      Parameters:
+      - EC2SubnetId
+      - EC2SecurityGroupId
+      - EC2KeyPair
+    -
+      Label:
+        default: 'Amazon Elasticsearch Service domain details'
+      Parameters:
+      - ESDomainName
+      - PublicIPToAccessKibana
     ParameterLabels:
       SNSEmail:
         default: 'SNS subscription E-mail:'
@@ -73,72 +73,78 @@ Parameters:
 Mappings:
   AWSRegionArch2AMI:
     ap-south-1:
-     HVM64: ami-76d6f519
+      HVM64: ami-76d6f519
     eu-west-1:
-     HVM64: ami-ca0135b3
+      HVM64: ami-ca0135b3
     eu-west-2:
-     HVM64: ami-a36f8dc4
+      HVM64: ami-a36f8dc4
     eu-west-3:
-     HVM64: ami-969c2deb
+      HVM64: ami-969c2deb
     ap-northeast-1:
-     HVM64: ami-92df37ed
+      HVM64: ami-92df37ed
     ap-northeast-2:
-     HVM64: ami-c10fa6af
+      HVM64: ami-c10fa6af
     ap-northeast-3:
-     HVM64: ami-b4faf4c9
+      HVM64: ami-b4faf4c9
     sa-east-1:
-     HVM64: ami-3885d854
+      HVM64: ami-3885d854
     ca-central-1:
-     HVM64: ami-338a0a57
+      HVM64: ami-338a0a57
     ap-southeast-1:
-     HVM64: ami-de90a5a2
+      HVM64: ami-de90a5a2
     ap-southeast-2:
-     HVM64: ami-423bec20
+      HVM64: ami-423bec20
     eu-central-1:
-     HVM64: ami-9a91b371
+      HVM64: ami-9a91b371
     us-east-1:
-     HVM64: ami-14c5486b
+      HVM64: ami-14c5486b
     us-east-2:
-     HVM64: ami-922914f7
+      HVM64: ami-922914f7
     us-west-1:
-     HVM64: ami-25110f45
+      HVM64: ami-25110f45
     us-west-2:
-     HVM64: ami-e251209a
+      HVM64: ami-e251209a
 
 Resources:
   ESDomain:
-   Type: AWS::Elasticsearch::Domain
-   Properties:
-    DomainName: !Ref ESDomainName
-    AccessPolicies:
-      Version: 2012-10-17
-      Statement:
-         - Effect: Allow
-           Principal:
+    Type: AWS::Elasticsearch::Domain
+    Properties:
+      DomainName: !Ref ESDomainName
+      AccessPolicies:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
             AWS:
-              - !Sub 'arn:aws:iam::${AWS::AccountId}:role/EMR_EC2_DefaultRole'
-              - !Sub 'arn:aws:iam::${AWS::AccountId}:role/${EC2Role}'
-           Action:
-              - "es:ESHttpPost"
-           Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ESDomainName}/*'
-         - Effect: Allow
-           Principal:
+            - !Sub 'arn:aws:iam::${AWS::AccountId}:role/EMR_EC2_DefaultRole'
+          Action:
+          - "es:ESHttpPost"
+          Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ESDomainName}/*'
+        - Effect: Allow
+          Principal:
             AWS:
-              - '*'
-           Action:
-              - "es:*"
-           Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ESDomainName}/*'
-           Condition:
+            - !Sub 'arn:aws:iam::${AWS::AccountId}:role/${EC2Role}'
+          Action:
+          - "es:ESHttpPut"
+          Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ESDomainName}/*'
+        - Effect: Allow
+          Principal:
+            AWS:
+            - '*'
+          Action:
+          - "es:*"
+          Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${ESDomainName}/*'
+          Condition:
             IpAddress:
               aws:SourceIp:
               - !Sub '${PublicIPToAccessKibana}'
-    ElasticsearchClusterConfig:
-      DedicatedMasterEnabled: "false"
-      InstanceCount: "1"
-      ZoneAwarenessEnabled: "false"
-      InstanceType: "m3.medium.elasticsearch"
-    ElasticsearchVersion: "5.5"
-    #ElasticsearchVersion: "6.3"
+      ElasticsearchClusterConfig:
+        DedicatedMasterEnabled: "false"
+        InstanceCount: "1"
+        ZoneAwarenessEnabled: "false"
+        InstanceType: "m3.medium.elasticsearch"
+      ElasticsearchVersion: "5.5"
+      #ElasticsearchVersion: "6.3"
 
   KinesisStream:
     Type: "AWS::Kinesis::Stream"
@@ -149,8 +155,8 @@ Resources:
     Type: AWS::EMR::Cluster
     Properties:
       Applications:
-        - Name: Hadoop
-        - Name: Flink
+      - Name: Hadoop
+      - Name: Flink
       AutoScalingRole: "EMR_AutoScaling_DefaultRole"
       EbsRootVolumeSize: 10
       Instances:
@@ -160,10 +166,10 @@ Resources:
           Market: ON_DEMAND
           EbsConfiguration:
             EbsBlockDeviceConfigs:
-              - VolumeSpecification:
-                  SizeInGB: 32
-                  VolumeType: gp2
-                VolumesPerInstance: 1
+            - VolumeSpecification:
+                SizeInGB: 32
+                VolumeType: gp2
+              VolumesPerInstance: 1
           Name: Master instance group
         CoreInstanceGroup:
           InstanceCount: 1
@@ -172,10 +178,10 @@ Resources:
           Name: Core instance group
           EbsConfiguration:
             EbsBlockDeviceConfigs:
-              - VolumeSpecification:
-                  SizeInGB: 32
-                  VolumeType: gp2
-                VolumesPerInstance: 1
+            - VolumeSpecification:
+                SizeInGB: 32
+                VolumeType: gp2
+              VolumesPerInstance: 1
         TerminationProtected: "false"
         Ec2SubnetId: !Ref EMRSubnet
         Ec2KeyName: !Ref EC2KeyPair
@@ -193,11 +199,10 @@ Resources:
       ActionOnFailure: 'CONTINUE'
       HadoopJarStep:
         Args:
-         - "aws"
-         - "s3"
-         - "cp"
-         - "s3://realtime-bushfire-alert-with-apache-flink-cep/flink-cep-consumer/flink-cep-consumer-latest.jar"
-         - "/tmp/"
+        - "wget"
+        - "https://github.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/releases/download/v1.0.0/flink-cep-consumer-latest.jar"
+        - "-P"
+        - "/tmp/"
         Jar: "command-runner.jar"
       JobFlowId: !Ref EMRCluster
       Name: 'Get-consumer-jar-step'
@@ -209,14 +214,14 @@ Resources:
       ActionOnFailure: 'CONTINUE'
       HadoopJarStep:
         Args:
-          - "flink-yarn-session"
-          - "-n"
-          - "1"
-          - "-s"
-          - "1"
-          - "-tm"
-          - "4096"
-          - "-d"
+        - "flink-yarn-session"
+        - "-n"
+        - "1"
+        - "-s"
+        - "1"
+        - "-tm"
+        - "4096"
+        - "-d"
         Jar: "command-runner.jar"
       JobFlowId: !Ref EMRCluster
       Name: 'Flink_session'
@@ -228,59 +233,59 @@ Resources:
       ActionOnFailure: 'CONTINUE'
       HadoopJarStep:
         Args:
-          - "flink"
-          - "run"
-          - "-p"
-          - "1"
-          - "/tmp/flink-cep-consumer-latest.jar"
-          - "--region"
-          - !Sub "${AWS::Region}"
-          - "--stream"
-          - !Sub "${KinesisStream}"
-          - "--es-endpoint"
-          - !Sub "https://${ESDomain.DomainEndpoint}"
-          - "--sns-topic-arn"
-          - !Sub "${IoTSNSTopic}"
+        - "flink"
+        - "run"
+        - "-p"
+        - "1"
+        - "/tmp/flink-cep-consumer-latest.jar"
+        - "--region"
+        - !Sub "${AWS::Region}"
+        - "--stream"
+        - !Sub "${KinesisStream}"
+        - "--es-endpoint"
+        - !Sub "https://${ESDomain.DomainEndpoint}"
+        - "--sns-topic-arn"
+        - !Sub "${IoTSNSTopic}"
         Jar: "command-runner.jar"
       JobFlowId: !Ref EMRCluster
       Name: 'Run-flink-consumer-step'
 
   IoTRole:
-      Type: "AWS::IAM::Role"
-      Properties:
-        AssumeRolePolicyDocument:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "iot.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+      -
+        PolicyName: "iot-action-role-policy"
+        PolicyDocument:
           Version: "2012-10-17"
           Statement:
-            - Effect: "Allow"
-              Principal:
-                Service: "iot.amazonaws.com"
-              Action:
-                - "sts:AssumeRole"
-        Path: "/"
-        Policies:
-          -
-            PolicyName: "iot-action-role-policy"
-            PolicyDocument:
-              Version: "2012-10-17"
-              Statement:
-                - Effect: "Allow"
-                  Action:
-                    - "kinesis:PutRecord"
-                    - "iot:Publish"
-                  Resource: "*"
+          - Effect: "Allow"
+            Action:
+            - "kinesis:PutRecord"
+            - "iot:Publish"
+            Resource: "*"
 
   IoTRule:
-     Type: "AWS::IoT::TopicRule"
-     Properties:
-       TopicRulePayload:
-         AwsIotSqlVersion: "2016-03-23"
-         RuleDisabled: "false"
-         Sql: >-
-           SELECT batch, event, node, parse_time("yyyy-MM-dd'T'HH:mm:ss.SSSZ", eventTimestamp) AS eventTime, CAST(temperature AS Decimal) AS temperature, infectedBy FROM 'weather-sensor-data/in'
-         Actions:
-           - Kinesis:
-                RoleArn: !GetAtt IoTRole.Arn
-                StreamName: !Ref KinesisStream
+    Type: "AWS::IoT::TopicRule"
+    Properties:
+      TopicRulePayload:
+        AwsIotSqlVersion: "2016-03-23"
+        RuleDisabled: "false"
+        Sql: >-
+          SELECT batch, event, node, parse_time("yyyy-MM-dd'T'HH:mm:ss.SSSZ", eventTimestamp) AS eventTime, CAST(temperature AS Decimal) AS temperature, infectedBy FROM 'weather-sensor-data/in'
+        Actions:
+        - Kinesis:
+            RoleArn: !GetAtt IoTRole.Arn
+            StreamName: !Ref KinesisStream
 
   IoTPolicy:
     Type: AWS::IoT::Policy
@@ -288,18 +293,18 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          -
-            Effect: "Allow"
-            Action:
-              - 'iot:Connect'
-            Resource:
-              - "*"
-          -
-            Effect: "Allow"
-            Action:
-              - 'iot:Publish'
-            Resource:
-              - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/*'
+        -
+          Effect: "Allow"
+          Action:
+          - 'iot:Connect'
+          Resource:
+          - "*"
+        -
+          Effect: "Allow"
+          Action:
+          - 'iot:Publish'
+          Resource:
+          - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/*'
 
   IoTSNSTopic:
     Type: "AWS::SNS::Topic"
@@ -312,41 +317,41 @@ Resources:
       TopicArn: !Ref IoTSNSTopic
 
   EC2Role:
-      Type: 'AWS::IAM::Role'
-      Properties:
-        AssumeRolePolicyDocument:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - 'ec2.amazonaws.com'
+          Action:
+          - 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+      - PolicyName: IoTAccessRole
+        PolicyDocument:
           Version: '2012-10-17'
           Statement:
           - Effect: Allow
-            Principal:
-              Service:
-              - 'ec2.amazonaws.com'
             Action:
-            - 'sts:AssumeRole'
-        Path: '/'
-        Policies:
-        - PolicyName: IoTAccessRole
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-            - Effect: Allow
-              Action:
-              - 'iot:CreateKeysAndCertificate'
-              - 'iot:DeleteCertificate'
-              - 'iot:UpdateCertificate'
-              - 'iot:DescribeEndpoint'
-              - 'iot:AttachPolicy'
-              - 'iot:DetachPolicy'
-              - 's3:*'
-              Resource:
-              - '*'
+            - 'iot:CreateKeysAndCertificate'
+            - 'iot:DeleteCertificate'
+            - 'iot:UpdateCertificate'
+            - 'iot:DescribeEndpoint'
+            - 'iot:AttachPolicy'
+            - 'iot:DetachPolicy'
+            #- 's3:*'
+            Resource:
+            - '*'
 
   EC2InstanceProfile:
-      Type: 'AWS::IAM::InstanceProfile'
-      Properties:
-        Path: '/'
-        Roles:
-        - !Ref EC2Role
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: '/'
+      Roles:
+      - !Ref EC2Role
 
   EC2Simulator:
     Type: AWS::EC2::Instance
@@ -399,11 +404,11 @@ Resources:
                 esac
                 exit 0
               - CMD: !Join
-                 - ' '
-                 - - 'java -jar $PROGDIR/$JARNAME'
-                   - '-topic weather-sensor-data/in'
-                   - '-cert $CERTIFICATE'
-                   - '-pk $PRIVATE_KEY -d'
+                - ' '
+                - - 'java -jar $PROGDIR/$JARNAME'
+                  - '-topic weather-sensor-data/in'
+                  - '-cert $CERTIFICATE'
+                  - '-pk $PRIVATE_KEY -d'
               mode: '000744'
               owner: 'root'
               group: 'root'
@@ -414,61 +419,64 @@ Resources:
               command: 'yum remove -y java-1.7.0'
             "02-create-dir":
               command: 'mkdir -p /opt/iot-simulator/{elasticsearch,iot-certificate}'
-            "03-get-es-files":
-              command: 'aws s3 cp --recursive s3://realtime-bushfire-alert-with-apache-flink-cep/elasticsearch/ .'
+            "03-get-es-mapping":
+              command: 'wget https://raw.githubusercontent.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/master/elasticsearch/mapping.json'
               cwd: '/opt/iot-simulator/elasticsearch'
-            "04-get-es-proxy":
-              command: 'wget https://github.com/abutaha/aws-es-proxy/releases/download/v0.8/aws-es-proxy-0.8-linux-amd64'
+            "04-get-es-visualization":
+              command: 'wget https://raw.githubusercontent.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/master/elasticsearch/visualization.json'
               cwd: '/opt/iot-simulator/elasticsearch'
-            "05-get-iot-jar":
-              command: 'aws s3 cp s3://realtime-bushfire-alert-with-apache-flink-cep/iot-simulator/iot-simulator-latest.jar iot-simulator-latest.jar'
+            #"04-get-es-visualization":
+            #  command: 'wget https://raw.githubusercontent.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/master/elasticsearch/visualization-v63.json'
+            #  cwd: '/opt/iot-simulator/elasticsearch'
+            "05-get-es-dashboard":
+              command: 'wget https://raw.githubusercontent.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/master/elasticsearch/dashboard.json'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            #"05-get-es-dashboard":
+            #  command: 'wget https://raw.githubusercontent.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/master/elasticsearch/dashboard-v63.json'
+            #  cwd: '/opt/iot-simulator/elasticsearch'
+            "06-get-iot-jar":
+              command: 'wget https://github.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/releases/download/v1.0.0/iot-simulator-latest.jar'
               cwd: '/opt/iot-simulator'
-            "06-create-iot-certificate":
+            "07-create-iot-certificate":
               command: !Join
-                - ' '
-                - - 'aws iot create-keys-and-certificate --set-as-active'
-                  -  '--certificate-pem-outfile certificate.crt'
-                  -  '--public-key-outfile public.key'
-                  -  '--private-key-outfile private.key'
-                  -  !Sub '--region ${AWS::Region}'
-                  -  '--query certificateId'
-                  -  '--output text > iot-certificate-id'
+              - ' '
+              - - 'aws iot create-keys-and-certificate --set-as-active'
+                -  '--certificate-pem-outfile certificate.crt'
+                -  '--public-key-outfile public.key'
+                -  '--private-key-outfile private.key'
+                -  !Sub '--region ${AWS::Region}'
+                -  '--query certificateId'
+                -  '--output text > iot-certificate-id'
               cwd: '/opt/iot-simulator/iot-certificate'
-            "07-iot-certificate-attach-policy":
+            "08-iot-certificate-attach-policy":
               command: !Join
-                - ' '
-                - - 'aws iot attach-policy'
-                  - !Sub '--policy-name ${IoTPolicy}'
-                  - '--target'
-                  - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:cert/$(cat iot-certificate/iot-certificate-id)'
-                  - !Sub '--region ${AWS::Region}'
+              - ' '
+              - - 'aws iot attach-policy'
+                - !Sub '--policy-name ${IoTPolicy}'
+                - '--target'
+                - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:cert/$(cat iot-certificate/iot-certificate-id)'
+                - !Sub '--region ${AWS::Region}'
               cwd: '/opt/iot-simulator'
-            "08-fix-permission":
+            "09-fix-permission":
               command: "chown -R ec2-user /opt/iot-simulator && chmod -R go-rwx /opt/iot-simulator"
-            "09-run-es-proxy":
-              command: !Sub 'chmod +x ./aws-es-proxy-0.8-linux-amd64 ; su ec2-user -c "nohup ./aws-es-proxy-0.8-linux-amd64 -endpoint https://${ESDomain.DomainEndpoint} -log-to-file > /dev/null 2>&1 &"'
-              cwd: '/opt/iot-simulator/elasticsearch'
             "10-create-es-mapping":
-              command: 'curl -XPUT http://localhost:9200/weather-sensor-data/ -H "Content-Type: application/json" -d @mapping.json'
+              command: 'curl -XPUT https://${ESDomain.DomainEndpoint}/weather-sensor-data/ -H "Content-Type: application/json" -d @mapping.json'
               cwd: '/opt/iot-simulator/elasticsearch'
-            # Due to a breaking change in Elasticsearch v6.x you will not be able
-            # restore/import the dashboard and visualization objects in an automated way
-            # as shown in steps 11 and 12 below.
-            # See here: https://discuss.elastic.co/t/rejecting-mapping-update-to-kibana-as-the-final-mapping-would-have-more-than-1-type-visualization-doc-error/133557/8
-            # Rather, you need to import the files manually for now through the Kibana dashboard.
-            # Please refer to the blog article instructions to download the dashboard and
-            # visualization objects from the GitHub repository and and restore them properly.
-            "11-create-kibana-dashboard":
-              command: 'jq -rc ".[]._source" dashboard.json |curl -XPUT http://localhost:9200/.kibana/dashboard/851993d0-2101-11e8-84c9-cf2b2ab68f42 -H "Content-Type: application/json" -d @-'
-              #command: 'jq -rc ".[]._source" dashboard-v63.json |curl -XPUT http://localhost:9200/.kibana/dashboard/b42d49a0-a43c-11e8-9686-d7f99abf094e -H "Content-Type: application/json" -d @-'
-              cwd: '/opt/iot-simulator/elasticsearch'
-            "12-create-kibana-visualization":
-              command: 'jq -rc ".[]._source" visualization.json |curl -XPUT http://localhost:9200/.kibana/visualization/ff67a7e0-2100-11e8-84c9-cf2b2ab68f42 -H "Content-Type: application/json" -d @-'
-              #command: 'jq -rc ".[]._source" visualization-v63.json |curl -XPUT http://localhost:9200/.kibana/visualization/44cf00d0-a43c-11e8-9686-d7f99abf094e -H "Content-Type: application/json" -d @-'
-              cwd: '/opt/iot-simulator/elasticsearch'
-            "13-run-simulator":
+            "11-run-simulator":
               command: "service iot-simulator start"
-            "14-signal-success":
+            "12-create-kibana-dashboard":
+              command: 'jq -rc ".[]._source" dashboard.json |curl -XPUT https://${ESDomain.DomainEndpoint}/.kibana/dashboard/b42d49a0-a43c-11e8-9686-d7f99abf094e -H "Content-Type: application/json" -d @-'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "13-create-kibana-visualization":
+              command: 'jq -rc ".[]._source" visualization.json |curl -XPUT https://${ESDomain.DomainEndpoint}/.kibana/visualization/IoT-Heatmap-Visualization -H "Content-Type: application/json" -d @-'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "14-create-es-index-pattern":
+              command: curl -XPUT https://${ESDomain.DomainEndpoint}/.kibana/index-pattern/weather-sensor-data -d '{"title":"weather-sensor-data","timeFieldName":"eventTime"}'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "15-create-es-default-index":
+              command: curl -XPUT https://${ESDomain.DomainEndpoint}/.kibana/config/5.5.2 -d '{"defaultIndex":"weather-sensor-data"}'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "16-signal-success":
               command: !Sub '/opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2Simulator'
               test: "pgrep -f iot-simulator-latest.jar"
     Properties:
@@ -481,11 +489,11 @@ Resources:
       InstanceType: "t2.small"
       KeyName: !Ref EC2KeyPair
       NetworkInterfaces:
-        - AssociatePublicIpAddress: 'true'
-          DeviceIndex: '0'
-          GroupSet:
-            - !Ref EC2SecurityGroupId
-          SubnetId: !Ref EC2SubnetId
+      - AssociatePublicIpAddress: 'true'
+        DeviceIndex: '0'
+        GroupSet:
+        - !Ref EC2SecurityGroupId
+        SubnetId: !Ref EC2SubnetId
       UserData:
         'Fn::Base64': !Sub |
           #!/bin/bash -x
@@ -501,8 +509,8 @@ Resources:
 
 Outputs:
   KibanaURL:
-    Description: Kibana Visualization URL
-    Value: !Sub 'https://${ESDomain.DomainEndpoint}/_plugin/kibana'
+    Description: Kibana Visualization Dashboard URL
+    Value: !Sub 'https://${ESDomain.DomainEndpoint}/_plugin/kibana/app/kibana#/dashboard/IoTHeatmapDashboard'
   EMRWebUI:
     Description: URL of the YARN ResourceManager on EMR
     Value: !Sub 'https://${EMRCluster.MasterPublicDNS}:8088/'

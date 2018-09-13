@@ -1,12 +1,12 @@
 [
   {
-    "_id": "b42d49a0-a43c-11e8-9686-d7f99abf094e",
+    "_id": "IoT-Heatmap-Dashboard",
     "_type": "dashboard",
     "_source": {
       "title": "IoTHeatmapDashboard",
       "hits": 0,
       "description": "",
-      "panelsJSON": "[{\"panelIndex\":\"1\",\"gridData\":{\"x\":0,\"y\":0,\"w\":48,\"h\":15,\"i\":\"1\"},\"version\":\"6.3.1\",\"type\":\"visualization\",\"id\":\"44cf00d0-a43c-11e8-9686-d7f99abf094e\",\"embeddableConfig\":{}}]",
+      "panelsJSON": "[{\"panelIndex\":\"1\",\"gridData\":{\"x\":0,\"y\":0,\"w\":48,\"h\":15,\"i\":\"1\"},\"version\":\"6.3.1\",\"type\":\"visualization\",\"id\":\"IoT-Heatmap-Visualization\",\"embeddableConfig\":{}}]",
       "optionsJSON": "{\"darkTheme\":false,\"useMargins\":true,\"hidePanelTitles\":false}",
       "version": 1,
       "timeRestore": false,

@@ -108,7 +108,7 @@ In this section, we will setup a Amazon Kinesis Data Stream named `weather-senso
 
 ## Setup Amazon Elasticsearch Service domain for visualization
 
-For the purpose of visualization, we need to setup a single data node only Amazon Elasticsearch Service domain running on the latest Elasticsearch version 6.3. You should secure the access into the domain by restricting its access by a single IAM user of your choice. Otherwise, you can also restrict the access from a specific IP address. For the purpose of this demonstration we will add a custom IAM policy to allow the `EMR_EC2_DefaultRole` to bulk write the documents into this domain from our Apache Flink CEP consumer program. A sample access policy named `access-policy.json` is provided under the `elasticsearch\` directory which allows both read and write access to the domain.
+For the purpose of visualization, we need to setup a single data node only Amazon Elasticsearch Service domain running on the latest Elasticsearch version 6.3. You should secure the access into the domain by restricting its access by a single IAM user of your choice. Otherwise, you can also restrict the access from a specific IP address. For the purpose of this demonstration we will add a custom IAM policy to allow the `EMR_EC2_DefaultRole` to bulk write the documents into this domain from our Apache Flink CEP consumer program. A sample access policy named `access-policy.json` is provided under the `elasticsearch/` directory which allows both read and write access to the domain.
 
 ```
 % aws es create-elasticsearch-domain --domain-name weather-sensor-documents --elasticsearch-version 6.3 --elasticsearch-cluster-config InstanceType=m3.medium.elasticsearch,InstanceCount=1 --access-policies file://~/access-policy.json --region us-east-1
@@ -142,8 +142,6 @@ PUT sensor-readings
 
 GET sensor-readings
 ```
-
-Next,
 
 ## Setup Amazon SNS topic for alerting
 
