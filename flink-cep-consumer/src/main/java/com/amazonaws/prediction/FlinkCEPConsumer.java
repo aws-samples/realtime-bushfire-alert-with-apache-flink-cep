@@ -46,7 +46,7 @@ import java.util.*;
 
 public class FlinkCEPConsumer {
     // Static parameters
-    private static final String ES_DEFAULT_INDEX = "sensor-readings";
+    private static final String ES_DEFAULT_INDEX = "weather-sensor-data";
     private static final String ES_DEFAULT_INDEX_TYPE = "sensor";
     private static final String ES_DEFAULT_BATCH_SIZE = "100";  // Bulk document batch size
     private static final long ES_DEFAULT_BATCH_DURATION = 60000; // Bulk flush interval set to 60 s
