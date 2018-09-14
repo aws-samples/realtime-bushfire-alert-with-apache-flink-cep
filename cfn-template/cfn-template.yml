@@ -144,7 +144,6 @@ Resources:
         ZoneAwarenessEnabled: "false"
         InstanceType: "m3.medium.elasticsearch"
       ElasticsearchVersion: "5.5"
-      #ElasticsearchVersion: "6.3"
 
   KinesisStream:
     Type: "AWS::Kinesis::Stream"
@@ -425,19 +424,16 @@ Resources:
             "04-get-es-visualization":
               command: 'wget https://raw.githubusercontent.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/master/elasticsearch/visualization.json'
               cwd: '/opt/iot-simulator/elasticsearch'
-            #"04-get-es-visualization":
-            #  command: 'wget https://raw.githubusercontent.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/master/elasticsearch/visualization-v63.json'
-            #  cwd: '/opt/iot-simulator/elasticsearch'
             "05-get-es-dashboard":
               command: 'wget https://raw.githubusercontent.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/master/elasticsearch/dashboard.json'
               cwd: '/opt/iot-simulator/elasticsearch'
-            #"05-get-es-dashboard":
-            #  command: 'wget https://raw.githubusercontent.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/master/elasticsearch/dashboard-v63.json'
-            #  cwd: '/opt/iot-simulator/elasticsearch'
-            "06-get-iot-jar":
+            "06-get-es-proxy":
+              command: 'wget https://github.com/abutaha/aws-es-proxy/releases/download/v0.8/aws-es-proxy-0.8-linux-amd64'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "07-get-iot-jar":
               command: 'wget https://github.com/aws-samples/realtime-bushfire-alert-with-apache-flink-cep/releases/download/v1.0.0/iot-simulator-latest.jar'
               cwd: '/opt/iot-simulator'
-            "07-create-iot-certificate":
+            "08-create-iot-certificate":
               command: !Join
               - ' '
               - - 'aws iot create-keys-and-certificate --set-as-active'
@@ -448,7 +444,7 @@ Resources:
                 -  '--query certificateId'
                 -  '--output text > iot-certificate-id'
               cwd: '/opt/iot-simulator/iot-certificate'
-            "08-iot-certificate-attach-policy":
+            "09-iot-certificate-attach-policy":
               command: !Join
               - ' '
               - - 'aws iot attach-policy'
@@ -457,25 +453,22 @@ Resources:
                 - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:cert/$(cat iot-certificate/iot-certificate-id)'
                 - !Sub '--region ${AWS::Region}'
               cwd: '/opt/iot-simulator'
-            "09-fix-permission":
+            "10-fix-permission":
               command: "chown -R ec2-user /opt/iot-simulator && chmod -R go-rwx /opt/iot-simulator"
-            "10-create-es-mapping":
-              command: 'curl -XPUT https://${ESDomain.DomainEndpoint}/weather-sensor-data/ -H "Content-Type: application/json" -d @mapping.json'
+            "11-run-es-proxy":
+              command: !Sub 'chmod +x ./aws-es-proxy-0.8-linux-amd64 ; su ec2-user -c "nohup ./aws-es-proxy-0.8-linux-amd64 -endpoint https://${ESDomain.DomainEndpoint} -log-to-file > /dev/null 2>&1 &"'
               cwd: '/opt/iot-simulator/elasticsearch'
-            "11-run-simulator":
+            "12-create-es-mapping":
+              command: 'curl -XPUT http://localhost:9200/weather-sensor-data/ -H "Content-Type: application/json" -d @mapping.json'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "13-create-kibana-dashboard":
+              command: 'jq -rc ".[]._source" dashboard.json |curl -XPUT http://localhost:9200/.kibana/dashboard/b42d49a0-a43c-11e8-9686-d7f99abf094e -H "Content-Type: application/json" -d @-'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "14-create-kibana-visualization":
+              command: 'jq -rc ".[]._source" visualization.json |curl -XPUT http://localhost:9200/.kibana/visualization/IoT-Heatmap-Visualization -H "Content-Type: application/json" -d @-'
+              cwd: '/opt/iot-simulator/elasticsearch'
+            "15-run-simulator":
               command: "service iot-simulator start"
-            "12-create-kibana-dashboard":
-              command: 'jq -rc ".[]._source" dashboard.json |curl -XPUT https://${ESDomain.DomainEndpoint}/.kibana/dashboard/b42d49a0-a43c-11e8-9686-d7f99abf094e -H "Content-Type: application/json" -d @-'
-              cwd: '/opt/iot-simulator/elasticsearch'
-            "13-create-kibana-visualization":
-              command: 'jq -rc ".[]._source" visualization.json |curl -XPUT https://${ESDomain.DomainEndpoint}/.kibana/visualization/IoT-Heatmap-Visualization -H "Content-Type: application/json" -d @-'
-              cwd: '/opt/iot-simulator/elasticsearch'
-            "14-create-es-index-pattern":
-              command: curl -XPUT https://${ESDomain.DomainEndpoint}/.kibana/index-pattern/weather-sensor-data -d '{"title":"weather-sensor-data","timeFieldName":"eventTime"}'
-              cwd: '/opt/iot-simulator/elasticsearch'
-            "15-create-es-default-index":
-              command: curl -XPUT https://${ESDomain.DomainEndpoint}/.kibana/config/5.5.2 -d '{"defaultIndex":"weather-sensor-data"}'
-              cwd: '/opt/iot-simulator/elasticsearch'
             "16-signal-success":
               command: !Sub '/opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2Simulator'
               test: "pgrep -f iot-simulator-latest.jar"
